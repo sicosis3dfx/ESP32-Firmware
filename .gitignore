@@ -1,0 +1,14 @@
+# Archivos de compilación y binarios de Arduino / ESP32
+build/
+*.bin
+*.hex
+*.elf
+*.o
+*.a
+*.d
+
+# Entornos y editores
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
