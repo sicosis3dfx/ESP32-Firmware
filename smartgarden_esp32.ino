@@ -126,7 +126,7 @@ void consultarActuadoresFirebase() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
-  String url = String(FIREBASE_HOST) + "/telemetria/actual/actuadores/bombaAgua.json";
+  String url = String(FIREBASE_HOST) + "/telemetria/" + String(SMARTGARDEN_USUARIO) + "/actuadores/bombaAgua.json";
 
   http.begin(url);
   int httpCode = http.GET();
