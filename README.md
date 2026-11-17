@@ -24,8 +24,10 @@ En el archivo `smartgarden_esp32.ino`, edita las siguientes líneas según tu en
 const char* WIFI_SSID     = "TU_RED_WIFI";
 const char* WIFI_PASSWORD = "TU_PASSWORD_WIFI";
 
+
 // 2. Conexión Firebase Realtime Database
 const char* FIREBASE_HOST = "https://smartgarden-web-react-iot-default-rtdb.firebaseio.com";
+
 
 // 3. Aislamiento Multi-Usuario
 // Configura aquí tu nombre de usuario de SmartGarden (ej. "sicosis3dfx")
