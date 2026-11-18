@@ -55,9 +55,11 @@ flowchart TD
         DjangoAPI["Django REST Framework\n(Python 3.12 en Vercel Serverless)"]
         SupabaseDB[("PostgreSQL\n(Supabase Cloud Managed)")]
         SwaggerDocs["Swagger UI / OpenAPI\n/api/docs/"]
+        GroqCloud["Groq Cloud LLM\n(openai/gpt-oss-120b)\nAsesor FloraBot"]
 
         DjangoAPI <--> SupabaseDB
         DjangoAPI --- SwaggerDocs
+        DjangoAPI <--> GroqCloud
     end
 
     subgraph CLIENTS["4. Clientes Multiplataforma"]
@@ -78,10 +80,16 @@ flowchart TD
             ThreeJS["Gemelo Digital 3D\n(Three.js / WebGL)"]
             Charts["Histórico de Tendencias\n(Chart.js)"]
             ActuatorsPanel["Panel de Actuadores & E-STOP"]
+            FloraBotWidget["FloraBot IA\n(Chatbot Botánico & Bottom Sheet Móvil)"]
+            TourGuide["Guía Interactiva\n(Onboarding 6 Pasos & Spotlight Neón)"]
+            MobileNav["Navegación Móvil\n(Menú Hamburguesa CSS Grid)"]
 
             ReactUI --- ThreeJS
             ReactUI --- Charts
             ReactUI --- ActuatorsPanel
+            ReactUI --- FloraBotWidget
+            ReactUI --- TourGuide
+            ReactUI --- MobileNav
         end
     end
 
@@ -94,6 +102,7 @@ flowchart TD
 
     ViewModel -- "HTTPS REST (JWT Bearer)" --> DjangoAPI
     ReactUI -- "HTTPS REST (JWT Bearer)" --> DjangoAPI
+    FloraBotWidget -- "POST /api/chat/ (Contexto Botánico)" --> DjangoAPI
 ```
 
 ---
@@ -133,7 +142,7 @@ flowchart TD
 
 ### 3.2. `Web-React` (Portal Web y Gemelo Digital 3D)
 * **Directorio:** `E:\Mis Documentos\OneDrive - INACAP\GitHub\SmartGarden\Web-React`
-* **Tecnologías:** React 19, Vite, Three.js (WebGL), Tailwind CSS, Chart.js, Lucide React.
+* **Tecnologías:** React 19, Vite, Three.js (WebGL), Tailwind CSS, Chart.js, Marked.js, Lucide Icons.
 * **Despliegue:** Vercel en [https://smart-garden-web-react.vercel.app](https://smart-garden-web-react.vercel.app)
 * **Componentes Clave:**
   1. **Gemelo Digital 3D (WebGL / Three.js):**
@@ -142,26 +151,48 @@ flowchart TD
        - Follaje marchito/decaído si la humedad es deficiente o la temperatura es excesiva.
        - Sustrato oscurecido y brillante con alta humedad; seco y claro con baja humedad.
        - Iluminación ambiental cálida e intensa según los lux del sensor solar.
-  2. **Arquitectura de Sincronización Realtime (`public/index.html`):**
+  2. **FloraBot IA (Asistente Agronómico Inteligente):**
+     - Widget interactivo flotante en vivo (`florabot-launcher-button`) con estado pulsante y badge de actividad.
+     - Conectado a la API REST de Django (`POST /api/chat/`), pasando la telemetría viva de la maceta seleccionada (temperatura, humedad, iluminación) y los umbrales de la especie.
+     - Renderizador Markdown avanzado con soporte para tablas botánicas estilizadas (`border-collapse: separate`, cabecera verde esmeralda `rgba(46, 204, 113, 0.18)` continua y esquinas superiores curvas).
+     - **Modo Móvil Nativo:** Se transforma automáticamente en un *Bottom Sheet* del 85% de la pantalla (`h-[85vh]`), con manija superior táctil (*grab handle*), fondo difuminado (*backdrop blur*) al 55%, preguntas sugeridas en carrusel táctil (`touch-pan-x`) y margen seguro para la barra de gestos (`safe-area-inset-bottom`).
+     - **Modo Escritorio:** Tarjeta flotante ergonómica en esquina inferior derecha (`w-[440px]`, `bottom-6 right-6`).
+  3. **Guía Interactiva (Tour de Onboarding 6 Pasos):**
+     - Recorrido guiado de 6 pasos cubriendo: Flota de Macetas, Gemelo 3D, Sensores en Vivo, Actuadores, Historial y FloraBot.
+     - Resaltado visual de alto impacto con borde neón rojo pulsante animado (`tourRedPulse`), sombra profunda y oscurecimiento de fondo al 85% con `backdrop-filter: blur(6px)`.
+     - **Comportamiento Responsivo Asimétrico:**
+       - En escritorio: El diálogo se posiciona lateralmente junto a cada módulo sin cubrir gráficas ni macetas.
+       - En móvil: Se acopla en la base como *Bottom Sheet* y ejecuta un auto-desplazamiento vertical calculado (`window.pageYOffset + rect.top - 70`) para dejar el componente iluminado en el 65% superior de la pantalla. En el paso 6 eleva el botón de FloraBot por encima del diálogo.
+  4. **Cabecera Móvil y Menú Hamburguesa Animado:**
+     - En pantallas móviles (`sm:hidden`), oculta los botones dispersos de la barra superior dejando espacio libre al logo y título.
+     - Incorpora un botón de menú con rotación a `✕` que despliega un panel de opciones animado mediante **CSS Grid (`grid-template-rows: 0fr ➔ 1fr`)**, logrando una transición física de acordeón y deslizamiento tanto al abrir como al contraerse.
+     - Incluye selector de tema instantáneo (Modo Oscuro OLED y Modo Claro Pastel), acceso a la Guía, refresco manual de telemetría y cierre de sesión.
+     - Blindaje táctil con `pointer-events-none` en iconos internos y cierre automático al pulsar fuera de la barra.
+  5. **Arquitectura de Sincronización Realtime (`public/index.html`):**
      - Conexión vía `EventSource` a la URL del usuario en Firebase RTDB.
      - Manejo de actuadores con aislamiento por planta guardado en `localStorage` (`smartgarden_plant_actuators`).
      - Inversión visual: sección de actuadores ubicada en la parte superior para acceso rápido a botones de bomba, nebulizador y Parada de Emergencia (E-STOP).
-  3. **Aislamiento Multi-Tenant:**
+  6. **Aislamiento Multi-Tenant:**
      - Funciones `getFirebaseUserKey()` y `getFirebaseUrl()` para aislar la telemetría según el usuario logueado en sesión.
 
 ---
 
 ### 3.3. `API-Django` (Backend REST y Persistencia Relacional)
 * **Directorio:** `E:\Mis Documentos\OneDrive - INACAP\GitHub\SmartGarden\API-Django`
-* **Tecnologías:** Python 3.12, Django 5.x, Django REST Framework, Django SimpleJWT, PostgreSQL (Supabase), Whitenoise.
+* **Tecnologías:** Python 3.12, Django 5.x, Django REST Framework, Django SimpleJWT, PostgreSQL (Supabase), Groq Cloud SDK, Whitenoise.
 * **Despliegue:** Vercel Serverless en [https://smart-garden-api-django.vercel.app](https://smart-garden-api-django.vercel.app)
 * **Documentación Interactiva:** Swagger UI en `/api/docs/`
 * **Estado:** **Código protegido y estable**. No alterar sin requerimiento explícito.
-* **Modelos Centrales:**
+* **Modelos y Endpoints Centrales:**
   - `auth.User`: Identidad y credenciales del operador/agricultor.
   - `GardenModule`: Registro de hardware físico (número de serie del ESP32, versión de firmware, fecha de aprovisionamiento).
   - `UserPlant`: Maceta botánica asociada a un usuario específico (nombre botánico, especie, umbrales mínimos y máximos tolerables de temperatura y humedad).
   - `TelemetryLog`: Registro histórico de series temporales de mediciones (temperatura, humedad de aire, humedad de suelo, nivel de iluminación y timestamp).
+  - **FloraBot IA (`POST /api/chat/`):**
+    - Implementado en `core.views.ChatbotAPIView`.
+    - Impulsado por Groq API (`openai/gpt-oss-120b`).
+    - Recibe `message`, `history` (últimos 6 turnos) y `plant_context` (telemetría viva y umbrales de especie).
+    - Aplica `FLORABOT_SYSTEM_PROMPT` con instrucciones de diagnóstico agronómico diferencial sin pedir datos redundantes al operador.
 
 ---
 
